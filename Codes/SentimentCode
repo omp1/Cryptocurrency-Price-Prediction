@@ -1,0 +1,29 @@
+from google.colab import files
+import pandas as pd
+import matplotlib.pyplot as plt
+import ast
+
+uploaded = files.upload()
+
+sentiment_data = pd.read_csv('cryptonews.csv')
+
+#have to use ast library to parse the strings here
+sentiment_data['polarity'] = sentiment_data['sentiment'].apply(lambda x: ast.literal_eval(x)['polarity'])
+
+#handle mixed formats
+sentiment_data['date'] = pd.to_datetime(sentiment_data['date'], errors='coerce')
+
+#clean the invalid rows
+sentiment_data = sentiment_data.dropna(subset=['date'])
+
+daily_sentiment = sentiment_data.groupby(sentiment_data['date'].dt.date)['polarity'].mean()
+
+plt.figure(figsize=(12, 6))
+plt.scatter(daily_sentiment.index, daily_sentiment.values, label='Average Polarity', color='blue', alpha=0.6)
+plt.title('Daily Social Sentiment (Polarity) Over Time', fontsize=16)
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Average Polarity', fontsize=12)
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.show()
