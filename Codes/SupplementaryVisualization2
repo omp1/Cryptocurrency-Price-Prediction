@@ -1,0 +1,25 @@
+#Simple ethereum price graph
+
+from google.colab import files
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+uploaded = files.upload()
+
+#upload and read file then make dataframe
+ethereum_data = pd.read_csv('ethereum.csv')
+
+ethereum_data['date'] = pd.to_datetime(ethereum_data['date'])
+
+
+plt.figure(figsize=(12, 6))
+#get the preferred columns
+plt.plot(ethereum_data['date'], ethereum_data['price'], label='Ethereum Price', color='orange')
+plt.title('Ethereum Price (2015-2023)', fontsize=16)
+plt.xlabel('Time', fontsize=12)
+plt.ylabel('Price (USD)', fontsize=12)
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.show()
