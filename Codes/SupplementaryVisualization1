@@ -1,0 +1,55 @@
+#These were some other visualizations done, however they weren't included in final results/discussion due to poor quality 
+
+from google.colab import files
+import pandas as pd
+import matplotlib.pyplot as plt
+import ast
+
+uploaded = files.upload()
+bitcoin_data = pd.read_csv('Bitcoin Merged Data.csv')
+bitcoin_data['Timestamp'] = pd.to_datetime(bitcoin_data['Timestamp'], errors='coerce')
+bitcoin_data['date'] = bitcoin_data['Timestamp'].dt.date
+
+
+uploaded = files.upload()
+ethereum_data = pd.read_csv('ethereum.csv')
+ethereum_data['date'] = pd.to_datetime(ethereum_data['date'], errors='coerce')
+
+
+uploaded = files.upload()
+cpi_data = pd.read_csv('CPIAUCSL.csv')
+cpi_data['DATE'] = pd.to_datetime(cpi_data['DATE'], errors='coerce')
+cpi_data['date'] = cpi_data['DATE'].dt.date
+
+
+uploaded = files.upload()
+sentiment_data = pd.read_csv('cryptonews.csv')
+sentiment_data['polarity'] = sentiment_data['sentiment'].apply(lambda x: ast.literal_eval(x)['polarity'])
+sentiment_data['date'] = pd.to_datetime(sentiment_data['date'], errors='coerce').dt.date
+sentiment_data = sentiment_data.dropna(subset=['date'])
+daily_sentiment = sentiment_data.groupby('date')['polarity'].mean()
+
+#merge data
+combined_data = pd.merge(bitcoin_data[['date', 'Price']], cpi_data[['date', 'CPIAUCSL']], on='date', how='inner')
+combined_data = pd.merge(combined_data, daily_sentiment.reset_index(), on='date', how='inner')
+combined_data.rename(columns={'Price': 'Bitcoin Price', 'CPIAUCSL': 'CPI', 'polarity': 'Sentiment Polarity'}, inplace=True)
+
+#Bitcoin Price vs Sentiment Polarity
+plt.figure(figsize=(12, 6))
+plt.scatter(combined_data['Sentiment Polarity'], combined_data['Bitcoin Price'], alpha=0.5, color='blue')
+plt.title('Bitcoin Price vs Sentiment Polarity', fontsize=16)
+plt.xlabel('Sentiment Polarity', fontsize=12)
+plt.ylabel('Bitcoin Price (USD)', fontsize=12)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+#Bitcoin Price vs CPI
+plt.figure(figsize=(12, 6))
+plt.scatter(combined_data['CPI'], combined_data['Bitcoin Price'], alpha=0.5, color='green')
+plt.title('Bitcoin Price vs CPI', fontsize=16)
+plt.xlabel('CPI', fontsize=12)
+plt.ylabel('Bitcoin Price (USD)', fontsize=12)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
