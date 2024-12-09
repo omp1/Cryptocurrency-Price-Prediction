@@ -1,0 +1,53 @@
+from google.colab import files
+import pandas as pd
+import matplotlib.pyplot as plt
+import ast
+
+files.upload()  
+
+cpi_data = pd.read_csv('CPIAUCSL.csv')
+btc_data = pd.read_csv('Bitcoin Merged Data.csv')
+
+
+btc_data['Timestamp'] = pd.to_datetime(btc_data['Timestamp'])
+cpi_data['DATE'] = pd.to_datetime(cpi_data['DATE'])
+
+
+merged_data = pd.merge(
+    btc_data,
+    cpi_data,
+    left_on=btc_data['Timestamp'].dt.to_period('M'),  # Match by month-year
+    right_on=cpi_data['DATE'].dt.to_period('M'),
+    how='inner'
+)
+
+
+merged_data = merged_data.drop(columns=['key_0'])
+
+
+merged_data.rename(columns={'CPIAUCSL': 'CPI', 'DATE': 'CPI_Date'}, inplace=True)
+
+
+fig, ax1 = plt.subplots(figsize=(12, 6))
+
+
+line1 = ax1.plot(merged_data['Timestamp'], merged_data['Price'], color='red', label='Bitcoin Price')
+ax1.set_xlabel('Date')
+ax1.set_ylabel('Bitcoin Price (USD)', color='red')
+ax1.tick_params(axis='y', labelcolor='red')
+
+
+ax2 = ax1.twinx()
+line2 = ax2.plot(merged_data['Timestamp'], merged_data['CPI'], color='blue', label='CPI')
+ax2.set_ylabel('CPI', color='blue')
+ax2.tick_params(axis='y', labelcolor='blue')
+
+#combine legends into one box
+lines = line1 + line2
+labels = [line.get_label() for line in lines]
+ax1.legend(lines, labels, loc='upper left')
+
+
+plt.title("Bitcoin Price vs CPI Over Time")
+plt.grid(True)
+plt.show()
